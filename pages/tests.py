@@ -7,7 +7,7 @@ class HomePageTests(SimpleTestCase):
     def test_homepage(self):
         response = self.client.get(reverse("home"), secure=True)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Research, thoughtfully scheduled")
+        self.assertContains(response, "Research, <em>thoughtfully</em> scheduled")
 
     def test_accessible_main_landmark(self):
         response = self.client.get(reverse("home"), secure=True)
