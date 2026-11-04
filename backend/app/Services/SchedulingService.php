@@ -229,12 +229,17 @@ final class SchedulingService
             if ($this->isExpired($invitation, $now)) {
                 throw new SchedulingException('INVITATION_EXPIRED');
             }
-            if ($this->activeBooking((int) $invitation['id'], true) !== null) {
-                throw new SchedulingException('ALREADY_BOOKED');
-            }
             $session = $this->lockSession($sessionId);
             $this->assertBookableSession($invitation, $session, $now);
 
+            // A FOR UPDATE lookup for a *missing* booking takes InnoDB gap locks
+            // and can deadlock simultaneous first-time reservations. The
+            // invitation row already serializes requests using the same token;
+            // after locking the session, this current transaction can safely
+            // use a plain read. The DB's unique active key is a second defense.
+            if ($this->activeBooking((int) $invitation['id'], false) !== null) {
+                throw new SchedulingException('ALREADY_BOOKED');
+            }
             if ($this->reservedSeats($sessionId) >= (int) $session['capacity']) {
                 throw new SchedulingException('SESSION_FULL');
             }
