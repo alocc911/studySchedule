@@ -302,9 +302,14 @@ final class SchedulingServiceTest extends CIUnitTestCase
             usleep(10000);
         }
         touch($dir . '/start');
-        foreach ($children as $pid) {
+        foreach ($children as $index => $pid) {
             pcntl_waitpid($pid, $status);
-            $this->assertTrue(pcntl_wifexited($status) && pcntl_wexitstatus($status) === 0);
+            $outcomePath = "{$dir}/result-{$index}";
+            $description = is_file($outcomePath) ? file_get_contents($outcomePath) : 'no result file';
+            $this->assertTrue(
+                pcntl_wifexited($status) && pcntl_wexitstatus($status) === 0,
+                "Worker {$index} exited unexpectedly: {$description}"
+            );
         }
         $outcomes = [];
         for ($i = 0; $i < $numberOfParticipants; $i++) {
