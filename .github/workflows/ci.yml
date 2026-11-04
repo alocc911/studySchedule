@@ -4,47 +4,76 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  django-checks:
+  frontend:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: study_schedule_test
-          POSTGRES_USER: study_schedule
-          POSTGRES_PASSWORD: ci-only-password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U study_schedule -d study_schedule_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      DJANGO_DEBUG: "false"
-      DJANGO_SECRET_KEY: "ci-only-not-a-production-secret-key-for-tests"
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
-      DB_ENGINE: "postgresql"
-      POSTGRES_DB: "study_schedule_test"
-      POSTGRES_USER: "study_schedule"
-      POSTGRES_PASSWORD: "ci-only-password"
-      POSTGRES_HOST: "localhost"
-      POSTGRES_PORT: "5432"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-dev.txt
-      - name: Install dependencies
-        run: python -m pip install -r requirements-dev.txt
-      - name: Lint
-        run: ruff check .
-      - name: Django system checks
-        run: python manage.py check
-      - name: Apply migrations
-        run: python manage.py migrate --noinput
-      - name: Run tests against PostgreSQL
-        run: python manage.py test
+          node-version: '22'
+      - name: Validate JavaScript
+        run: npm run check
+      - name: Run frontend tests
+        run: npm test
+
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: study_schedule_ci
+          MYSQL_USER: study_schedule
+          MYSQL_PASSWORD: ci-only-password
+          MYSQL_ROOT_PASSWORD: ci-only-root-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -u study_schedule -pci-only-password"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, mbstring, mysqli, pdo_mysql
+          tools: composer:v2
+          coverage: none
+      - name: Install CodeIgniter dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist
+      - name: Lint custom PHP
+        run: |
+          php -l backend/app/Controllers/Api/Health.php
+          php -l backend/app/Config/Routes.php
+          php -l deploy/cpanel-api-index.php
+      - name: Run PHP unit tests
+        working-directory: backend
+        run: composer test
+      - name: Verify API with real MySQL connection
+        run: |
+          cat > backend/.env <<'EOF'
+          CI_ENVIRONMENT = development
+          app.baseURL = 'http://127.0.0.1:8080/'
+          database.default.hostname = 127.0.0.1
+          database.default.database = study_schedule_ci
+          database.default.username = study_schedule
+          database.default.password = ci-only-password
+          database.default.DBDriver = MySQLi
+          database.default.port = 3306
+          EOF
+          cd backend
+          php spark serve --host 127.0.0.1 --port 8080 > /tmp/study-schedule-api.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8080/health > /tmp/health.json; then break; fi
+            sleep 1
+          done
+          cat /tmp/health.json
+          curl --fail --show-error http://127.0.0.1:8080/ready | tee /tmp/ready.json
+          php -r '$data=json_decode(file_get_contents("/tmp/ready.json"), true); if (($data["database"] ?? null) !== "connected") exit(1);'

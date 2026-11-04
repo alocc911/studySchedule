@@ -1,56 +1,99 @@
 # studySchedule
 
-A lightweight, invitation-only scheduling website for academic hospitality research.
+A small, independently hosted research appointment scheduler for invitation-only studies.
 
-**Status: Phase 1 foundation.** The public landing page, admin login, development database configuration and automated checks are included. Study/session models, invitations and actual booking are **not yet implemented**. Do not send participants to this prototype.
+**Status: Phase 1 rebuilt for a static JavaScript frontend + CodeIgniter 4 / MySQL backend.** The frontend is a working static site preview; the backend provides health endpoints, but no scheduling, participant accounts or administrative booking tools have been implemented yet.
 
-## Tech stack
+## Architecture
 
-- Python 3.12+, Django 5.2 LTS and server-rendered templates
-- PostgreSQL 16 for development and production
-- Built-in Django administration, to be customized in Phase 3
-- GitHub Actions for lint, Django checks, migration and tests
+```text
+frontend/        Static HTML, CSS, JavaScript — GitHub Pages and GoDaddy
+backend/         CodeIgniter 4 PHP API — GoDaddy or local PHP server
+  app/           Application code and framework configuration
+  public/        Backend-only document root (for local development)
+  writable/      Private logs, cache and session storage
+deploy/          GoDaddy cPanel split public/private deployment example
+tests/frontend/  Node built-in test runner, no frontend build dependencies
+.github/         Automated CI and GitHub Pages preview workflows
+compose.yaml     Local MySQL database
+```
 
-## Start locally
+The frontend has a single API adapter in `frontend/assets/js/api.js`. Its URL comes from `frontend/config.js` (a **public**, non-secret configuration file). The GitHub Pages copy intentionally sets `apiBaseUrl: null` and does **not** make live booking calls. The production GoDaddy copy will use `apiBaseUrl: '/api/'`.
 
-Prerequisites: Python 3.12+ and Docker Compose (or local PostgreSQL).
+The PHP API runs through CodeIgniter 4, and MySQL/MariaDB is the intended datastore. No external scheduling vendor or second paid hosting account is required.
 
-1. Clone the repository and enter its directory.
-2. Create a virtual environment: `python -m venv .venv` and activate it.
-3. Install dependencies: `python -m pip install -r requirements-dev.txt`.
-4. Copy `.env.example` to `.env`, and set a new local `DJANGO_SECRET_KEY`.
-5. Start PostgreSQL: `docker compose up -d db`.
-6. Initialize the database: `python manage.py migrate`.
-7. Start the website: `python manage.py runserver`.
+## Prerequisites
 
-Browse to `http://127.0.0.1:8000/`, `/health/`, or `/admin/`. To create a local admin account use `python manage.py createsuperuser`.
+- PHP 8.2+ with extensions `intl`, `mbstring`, `mysqli/mysqlnd` and `json`
+- Composer 2
+- Node.js 20+ for the frontend checks
+- MySQL 8 / compatible MariaDB (optional to start the static preview)
+- Docker Compose, or a local MySQL server, for backend readiness checks
 
-Django loads `.env` via python-dotenv. Never commit it. Passwords in `.env.example` and `compose.yaml` are **local development examples only**.
+**Before purchasing a GoDaddy plan**, confirm it includes PHP 8.2+, the required extensions, and MySQL/MariaDB. The deployment model does not need Python, PostgreSQL or a persistent Node server.
 
-## Quick UI smoke tests without Docker
+## Run the static frontend locally
 
-Set `DB_ENGINE=sqlite` and `DJANGO_DEBUG=true` in `.env`, then run `python manage.py migrate` and `python manage.py runserver`. SQLite is debug-only and **not** the supported database for the future booking engine.
+From the repository root:
 
-## Checks
+```bash
+python3 -m http.server 4173 --directory frontend
+```
 
-- `ruff check .`
-- `python manage.py check`
-- `python manage.py test`
+Open `http://127.0.0.1:4173/`. Python is used here only as a static file server; it is **not** part of the production system. You can also upload the same `frontend/` directory to GitHub Pages or any ordinary web host.
 
-The GitHub Actions workflow runs these checks with a PostgreSQL service and applies Django migrations.
+## Run the CodeIgniter API locally
 
-## Deployment and privacy
+```bash
+docker compose up -d db
+cd backend
+composer install
+cp .env.example .env
+php spark serve --host 127.0.0.1 --port 8080
+```
 
-Phase 1 is not production ready. Before launch, configure a real domain, HTTPS, a trusted proxy, strong secrets, administrator MFA, persistent backups, proper static file serving, and email delivery. `DJANGO_DEBUG` defaults to false; production uses secure cookies and HTTPS redirects. HSTS must be enabled only after the production TLS setup is validated.
+Visit `http://127.0.0.1:8080/health` to verify the PHP application, or `http://127.0.0.1:8080/ready` to verify MySQL connectivity. The local credentials in `compose.yaml` and `.env.example` are explicitly for development and must be replaced before deployment.
 
-The `/health/` endpoint is a simple liveness check, not a database-readiness check.
+## Run tests
 
-This app will store only scheduling information. Consents, research responses, recordings and waivers remain outside the site. No research participant data or production credentials belong in the repository.
+```bash
+npm run check
+npm test
+cd backend && composer test
+```
 
-## Next steps
+GitHub Actions runs JavaScript checks, PHPUnit, PHP syntax checks, and a real CodeIgniter-to-MySQL readiness smoke test.
 
-1. Booking domain models and concurrency-safe reservations.
-2. Professor administration: studies, sessions and invitation links.
-3. Participant booking, cancellations and rescheduling.
-4. Confirmation emails and notifications.
-5. Final design, security, accessibility, deployment.
+## Preview on GitHub Pages
+
+1. Merge the Phase 1 rebuild branch after reviewing its green CI checks.
+2. Go to **Settings → Pages** in this repository. Select **GitHub Actions** as the deployment source.
+3. Run the **Static frontend preview (GitHub Pages)** workflow manually if it does not deploy automatically after the merge.
+4. The expected site address, subject to GitHub enabling Pages for this private repository, is `https://alocc911.github.io/studySchedule/`.
+
+GitHub Pages eligibility for a **private** repository depends on the GitHub account plan. GitHub Pages sites are publicly accessible even when the repository is private. Never deploy secrets, participant records or backend code into the `frontend/` folder.
+
+**Important:** GitHub Pages hosts only the static frontend. Later end-to-end reservation tests will use a GoDaddy **staging** API and a separate test database. The same frontend code can connect to that API once it exists.
+
+## GoDaddy deployment
+
+See [deploy/README.md](deploy/README.md) for the planned inexpensive cPanel layout. The static frontend goes into `public_html/`; PHP framework files, credentials and vendor libraries stay **outside** the web root. A small `/api/` front controller forwards requests into CodeIgniter. Staging and production will have separate MySQL databases.
+
+There is **no** live GoDaddy deployment configured in Phase 1.
+
+## Security and scope
+
+This repository is private. GitHub Pages, if enabled, publishes only public static files. The website will eventually store limited scheduling data (study, invitation, session, booking, name and email), not consent forms or research responses. Secrets and real participant data must never be committed.
+
+Phase 1 contains no login or booking functionality; don't give its preview URL to research participants as an active scheduler.
+
+## Roadmap
+
+1. Phase 1: Static frontend, PHP API framework, MySQL connection, CI, Pages preview. **Proposed here.**
+2. Phase 2: Study, session, invitation, booking tables and transaction-safe booking services.
+3. Phase 3: Professor administrative interface and bulk session entry.
+4. Phase 4: Invitation-based booking, cancellation, rescheduling, group capacity.
+5. Phase 5: Confirmation emails and lifecycle notifications.
+6. Phase 6: Polish, accessibility, security, GoDaddy staging and production deployment.
+
+The old Django/PostgreSQL foundation remains available in Git history only and is removed from this branch.
