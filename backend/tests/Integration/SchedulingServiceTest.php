@@ -262,6 +262,10 @@ final class SchedulingServiceTest extends CIUnitTestCase
             $tokens[] = $this->token($study, "race{$sessionId}-{$i}@example.com");
         }
 
+        // Avoid inheriting a live MySQL socket across pcntl_fork(). Each child
+        // creates its own connection; the parent reconnects when reading totals.
+        $this->integrationDb->close();
+
         $dir = sys_get_temp_dir() . '/study-schedule-race-' . bin2hex(random_bytes(8));
         mkdir($dir, 0700);
         $children = [];
