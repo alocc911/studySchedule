@@ -20,7 +20,7 @@ use Throwable;
  */
 final class SchedulingServiceTest extends CIUnitTestCase
 {
-    private BaseConnection $db;
+    private BaseConnection $integrationDb;
     private SchedulingService $service;
     private DateTimeImmutable $base;
 
@@ -32,15 +32,15 @@ final class SchedulingServiceTest extends CIUnitTestCase
             $this->markTestSkipped('Requires dedicated CI MySQL database.');
         }
 
-        $this->db = Database::connect('default', false);
-        if (!str_ends_with((string) $this->db->getDatabase(), '_ci')) {
+        $this->integrationDb = Database::connect('default', false);
+        if (!str_ends_with((string) $this->integrationDb->getDatabase(), '_ci')) {
             $this->fail('Refusing to modify a database without the _ci suffix.');
         }
-        $this->db->query("SET time_zone = '+00:00'");
+        $this->integrationDb->query("SET time_zone = '+00:00'");
         foreach (['booking_events', 'bookings', 'invitations', 'sessions', 'studies'] as $table) {
-            $this->db->query("DELETE FROM {$table}");
+            $this->integrationDb->query("DELETE FROM {$table}");
         }
-        $this->service = new SchedulingService($this->db);
+        $this->service = new SchedulingService($this->integrationDb);
         $this->base = new DateTimeImmutable('now', new DateTimeZone('UTC'));
     }
 
@@ -74,7 +74,7 @@ final class SchedulingServiceTest extends CIUnitTestCase
 
     private function seatCount(int $sessionId): int
     {
-        return (int) $this->db->query(
+        return (int) $this->integrationDb->query(
             "SELECT COUNT(*) AS n FROM bookings WHERE session_id = ? AND status = 'booked'",
             [$sessionId]
         )->getRowArray()['n'];
@@ -113,7 +113,7 @@ final class SchedulingServiceTest extends CIUnitTestCase
         $this->assertSame(3, $this->seatCount($session));
         $this->assertSame(
             1,
-            (int) $this->db->table('booking_events')->where('event_type', 'canceled')->countAllResults()
+            (int) $this->integrationDb->table('booking_events')->where('event_type', 'canceled')->countAllResults()
         );
         $this->assertRejection('CAPACITY_BELOW_BOOKINGS', fn () => $this->service->changeSessionCapacity($session, 2));
     }
@@ -155,9 +155,9 @@ final class SchedulingServiceTest extends CIUnitTestCase
         $this->assertSame(1, $this->seatCount($new));
         $this->assertSame(
             'rescheduled',
-            $this->db->table('bookings')->select('status')->where('id', $original['id'])->get()->getRow('status')
+            $this->integrationDb->table('bookings')->select('status')->where('id', $original['id'])->get()->getRow('status')
         );
-        $this->assertSame(2, (int) $this->db->table('booking_events')->where('booking_id', $replacement['id'])->countAllResults() + (int) $this->db->table('booking_events')->where('booking_id', $original['id'])->countAllResults());
+        $this->assertSame(2, (int) $this->integrationDb->table('booking_events')->where('booking_id', $replacement['id'])->countAllResults() + (int) $this->integrationDb->table('booking_events')->where('booking_id', $original['id'])->countAllResults());
     }
 
     public function testExpiredLinkStillManagesExistingBookingButCannotMakeANewOne(): void
@@ -181,7 +181,7 @@ final class SchedulingServiceTest extends CIUnitTestCase
         $this->assertSame(43, strlen($issued['token']));
 
         $this->service->book($issued['token'], $session);
-        $row = $this->db->table('invitations')->where('id', $issued['id'])->get()->getRowArray();
+        $row = $this->integrationDb->table('invitations')->where('id', $issued['id'])->get()->getRowArray();
         $this->assertSame(hash('sha256', $issued['token']), $row['token_hash']);
         $this->assertStringNotContainsString($issued['token'], json_encode($row));
         $this->service->revokeInvitation($issued['id']);
@@ -217,7 +217,7 @@ final class SchedulingServiceTest extends CIUnitTestCase
             $start->modify('+1 hour'),
             6
         ));
-        $this->assertSame(1, (int) $this->db->table('sessions')->countAllResults());
+        $this->assertSame(1, (int) $this->integrationDb->table('sessions')->countAllResults());
     }
 
     public function testInactiveStudiesCannotAcceptBookingsButCanCancelExistingOnes(): void
