@@ -1,0 +1,27 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Independent hospitality research and invitation-based scheduling.">
+  <title>{% block title %}Hospitality Research{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="{% url 'home' %}" aria-label="Hospitality Research home">
+        <span class="brand-mark" aria-hidden="true">H.</span>
+        <span>Hospitality <strong>Research</strong></span>
+      </a>
+      <span class="header-note">Independent academic research</span>
+    </header>
+    {% block content %}{% endblock %}
+    <footer class="site-footer">
+      <span>Hospitality Research</span><span>Participation is by personal invitation.</span>
+    </footer>
+  </div>
+</body>
+</html>
