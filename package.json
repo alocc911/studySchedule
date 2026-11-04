@@ -1,0 +1,10 @@
+{
+  "name": "study-schedule-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/frontend/*.test.mjs",
+    "check": "node --check frontend/assets/js/api.js && node --check frontend/assets/js/main.js"
+  },
+  "engines": { "node": ">=20" }
+}
