@@ -52,7 +52,9 @@ jobs:
         run: |
           php -l backend/app/Controllers/Api/Health.php
           php -l backend/app/Controllers/Api/Professor.php
+          php -l backend/app/Controllers/Api/Participant.php
           php -l backend/app/Filters/ProfessorGuard.php
+          php -l backend/app/Filters/ParticipantRateLimit.php
           php -l backend/app/Config/Auth.php
           php -l backend/app/Config/Security.php
           php -l backend/app/Config/Filters.php
@@ -94,3 +96,9 @@ jobs:
           cat /tmp/admin-denied.json
           test "$admin_status" = '401'
           php spark routes | grep 'admin/studies'
+          # Participant API exists, but missing/invalid bearer credentials must
+          # be rejected before reading participant data.
+          missing_status=$(curl --silent --output /tmp/participant-denied.json --write-out '%{http_code}' http://127.0.0.1:8080/participant/invitation)
+          cat /tmp/participant-denied.json
+          test "$missing_status" = '404'
+          php spark routes | grep 'participant/book'
