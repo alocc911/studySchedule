@@ -165,6 +165,14 @@ final class NotificationDeliveryTest extends CIUnitTestCase
         }
         $this->assertSame('failed', $this->outbox()[0]['status']);
         $this->assertSame(0, $sender->run()['processed']);
+        $failedId = (int) $this->outbox()[0]['id'];
+        $this->assertFalse($sender->retryFailed($failedId + 9999));
+        $this->assertTrue($sender->retryFailed($failedId));
+        $this->assertSame('pending', $this->outbox()[0]['status']);
+        $this->assertSame(0, (int) $this->outbox()[0]['attempts']);
+        $this->mail->shouldFail = false;
+        $this->assertSame(1, $sender->run()['sent']);
+        $this->assertSame('sent', $this->outbox()[0]['status']);
     }
 
     public function testRescheduleAndCancelEmailsKeepOriginalEventSnapshot(): void
