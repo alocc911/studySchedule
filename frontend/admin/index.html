@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#f7f5ef">
+  <title>Professor Workspace | Hospitality Research</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/mark.svg">
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="./workspace.css">
+  <script src="../config.js" defer></script>
+  <script type="module" src="./workspace.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to workspace</a>
+  <div class="workspace-shell">
+    <header class="workspace-header">
+      <div class="workspace-brand">
+        <a class="brand-icon" href="../" aria-label="Hospitality Research homepage">H<span class="brand-period">.</span></a>
+        <div><span class="overline">HOSPITALITY RESEARCH</span><strong>Professor workspace</strong></div>
+      </div>
+      <div class="workspace-header-actions">
+        <span id="mode-badge" class="mode-badge">Loading</span>
+        <a href="../" class="quiet-link">View website</a>
+        <button type="button" class="quiet-button" id="exit-button" hidden>Sign out</button>
+      </div>
+    </header>
+
+    <main id="main-content" class="workspace-main">
+      <section id="demo-notice" class="demo-notice" hidden>
+        <div><strong>Interactive preview · Sample data only</strong>
+          <p>Changes stay in this browser. No email is sent, no real appointments are made, and generated invitation links are not active.</p>
+        </div>
+        <button type="button" class="outline-button" id="reset-demo">Reset demo</button>
+      </section>
+
+      <section id="auth-prompt" class="sign-in-card" hidden>
+        <p class="overline">PRIVATE ADMINISTRATION</p>
+        <h1>Sign in to manage your studies.</h1>
+        <p>This workspace requires a professor account on the PHP scheduling server. Public GitHub Pages never handles real participant records.</p>
+        <a id="login-link" class="primary-button" href="#">Professor sign in</a>
+      </section>
+
+      <section id="workspace" hidden>
+        <div class="workspace-heading">
+          <div>
+            <p class="overline">RESEARCH OPERATIONS</p>
+            <h1>Studies, at a glance.</h1>
+            <p class="heading-subtitle">Prepare sessions, send personal invitations, and keep appointments organized.</p>
+          </div>
+          <span id="account-name" class="account-name"></span>
+        </div>
+        <section class="stats" aria-label="Scheduling summary">
+          <div class="stat"><span>Research studies</span><strong id="stat-studies">—</strong></div>
+          <div class="stat"><span>Upcoming sessions</span><strong id="stat-sessions">—</strong></div>
+          <div class="stat"><span>Invitations issued</span><strong id="stat-invitations">—</strong></div>
+          <div class="stat"><span>Active bookings</span><strong id="stat-bookings">—</strong></div>
+        </section>
+
+        <nav class="workspace-tabs" aria-label="Workspace sections">
+          <button type="button" class="tab active" data-tab="studies" aria-current="page">Studies</button>
+          <button type="button" class="tab" data-tab="sessions">Sessions</button>
+          <button type="button" class="tab" data-tab="invitations">Invitations</button>
+          <button type="button" class="tab" data-tab="bookings">Bookings</button>
+        </nav>
+
+        <section class="workspace-section" id="panel-studies" aria-labelledby="studies-heading">
+          <div class="section-heading"><div><p class="overline">01 / STUDY MANAGEMENT</p><h2 id="studies-heading">Research studies</h2></div></div>
+          <div class="panel-layout">
+            <form id="study-form" class="work-card form-card">
+              <h3 id="study-form-title">Create a study</h3>
+              <input id="study-edit-id" type="hidden">
+              <label for="study-title">Study title</label>
+              <input id="study-title" type="text" maxlength="200" required placeholder="e.g., Tasting room experiences">
+              <label for="study-timezone">Study time zone</label>
+              <select id="study-timezone">
+                <option value="America/Chicago">Central (America/Chicago)</option>
+                <option value="America/New_York">Eastern (America/New_York)</option>
+                <option value="America/Denver">Mountain (America/Denver)</option>
+                <option value="America/Los_Angeles">Pacific (America/Los_Angeles)</option>
+                <option value="America/Phoenix">Arizona (America/Phoenix)</option>
+                <option value="UTC">UTC</option>
+              </select>
+              <label for="study-description">Description</label>
+              <textarea id="study-description" rows="3" placeholder="Brief purpose or context"></textarea>
+              <label for="study-instructions">Participant instructions</label>
+              <textarea id="study-instructions" rows="3" placeholder="Where to meet and what to expect"></textarea>
+              <div class="form-actions">
+                <button class="primary-button" id="save-study" type="submit">Create study</button>
+                <button class="outline-button" id="cancel-study-edit" type="button" hidden>Cancel edit</button>
+              </div>
+              <p class="helper">New studies start as drafts. Activate one when you're ready to accept reservations.</p>
+            </form>
+            <div class="work-card list-card">
+              <h3>Your studies</h3>
+              <div id="studies-list" class="record-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace-section" id="panel-sessions" aria-labelledby="sessions-heading" hidden>
+          <div class="section-heading"><div><p class="overline">02 / AVAILABILITY</p><h2 id="sessions-heading">Appointment sessions</h2></div></div>
+          <form id="sessions-form" class="work-card form-card wide-card">
+            <div class="field-row"><div class="field-grow">
+              <label for="session-study">Study</label>
+              <select id="session-study" required></select>
+            </div><p class="helper" id="session-timezone-note">Times are entered in the selected study's time zone.</p></div>
+            <div class="session-rows" id="session-rows"></div>
+            <div class="form-actions">
+              <button type="button" class="outline-button" id="add-session-row">Add another time</button>
+              <button type="submit" class="primary-button">Save sessions</button>
+            </div>
+            <p class="helper">Capacity 1 is an individual interview; 2 or more makes a group session. Overlapping sessions are rejected across studies. A batch saves completely or not at all.</p>
+          </form>
+          <div class="work-card table-card">
+            <h3>Scheduled sessions</h3>
+            <div class="table-scroll"><table><thead><tr><th>Study</th><th>Start</th><th>Location</th><th>Seats</th><th>Status</th><th>Manage</th></tr></thead><tbody id="sessions-table"></tbody></table></div>
+          </div>
+        </section>
+
+        <section class="workspace-section" id="panel-invitations" aria-labelledby="invitations-heading" hidden>
+          <div class="section-heading"><div><p class="overline">03 / PERSONAL LINKS</p><h2 id="invitations-heading">Participant invitations</h2></div></div>
+          <div class="panel-layout">
+            <form id="invitation-form" class="work-card form-card">
+              <h3>Generate a private link</h3>
+              <label for="invitation-study">Study</label><select id="invitation-study" required></select>
+              <label for="invitation-email">Participant email</label><input id="invitation-email" type="email" maxlength="254" required placeholder="person@example.com">
+              <label for="invitation-name">Name (optional)</label><input id="invitation-name" type="text" maxlength="200">
+              <label for="invitation-expiry">Link expiration (optional)</label><input id="invitation-expiry" type="datetime-local">
+              <p class="helper">You send the invitation yourself. The site generates a unique link; it does not email it.</p>
+              <button class="primary-button" type="submit">Generate link</button>
+              <div id="generated-link" class="generated-link" hidden>
+                <strong>Link generated — copy it now</strong>
+                <p id="link-advice" class="helper">For security, this link is only shown once. A replacement requires issuing a new invitation.</p>
+                <textarea id="link-value" rows="3" readonly aria-label="New invitation link"></textarea>
+                <button type="button" class="outline-button" id="copy-link">Copy invitation link</button>
+              </div>
+            </form>
+            <div class="work-card list-card">
+              <h3>Issued invitations</h3><div id="invitations-list" class="record-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace-section" id="panel-bookings" aria-labelledby="bookings-heading" hidden>
+          <div class="section-heading">
+            <div><p class="overline">04 / PARTICIPANTS</p><h2 id="bookings-heading">Reservations</h2></div>
+            <button type="button" id="export-bookings" class="outline-button">Export CSV</button>
+          </div>
+          <div class="work-card table-card">
+            <div class="table-scroll"><table><thead><tr><th>Participant</th><th>Study</th><th>Session</th><th>Status</th><th>Manage</th></tr></thead><tbody id="bookings-table"></tbody></table></div>
+            <p class="helper">Administrator changes override the participant self-service cutoff. Confirmation emails will be added in a later phase.</p>
+          </div>
+        </section>
+      </section>
+      <p class="message" id="workspace-message" role="status" aria-live="polite"></p>
+    </main>
+    <footer class="workspace-footer"><span>Hospitality Research · Administration</span><span>Scheduling only — research responses are stored elsewhere.</span></footer>
+  </div>
+</body>
+</html>

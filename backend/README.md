@@ -22,3 +22,11 @@ The framework is not installed on GitHub Pages; it will be hosted in the profess
 Use `CI_ENVIRONMENT=production` in deployment. Keep `.env`, `vendor/`, `app/`, and `writable/` outside the public web root. Route only the front controller through a public `/api/` path. Do not open additional routes without server-side access controls and CSRF/CORS review.
 
 The current API has no booking or admin endpoints. Phase 2 adds **internal PHP scheduling services** and migrations, but intentionally exposes no participant or administrator HTTP routes yet. See `../docs/phase-2-booking-engine.md`.
+
+## Phase 3 professor workspace
+
+The server now uses CodeIgniter Shield for password/session login. Public registration and magic links are disabled; only accounts assigned the `superadmin` group can use `/admin/*` API routes. CSRF is required on login and administration mutations. The browser UI is in `frontend/admin/` and must be hosted **on the same origin** as the PHP API for live use.
+
+Create the first professor account through the interactive Shield CLI (`php spark shield:user --help`, then `php spark shield:user create` and `php spark shield:user addgroup`). Assign the new account to `superadmin`; **never commit credentials**. Run `php spark migrate --all` after installing PHP dependencies to create Shield's authentication tables.
+
+For deployment readiness, enable MFA and configure outgoing email before any real participant data is entered. See `../docs/phase-3-professor-workspace.md`.

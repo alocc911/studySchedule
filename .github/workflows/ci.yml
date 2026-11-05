@@ -51,6 +51,11 @@ jobs:
       - name: Lint application and integration PHP
         run: |
           php -l backend/app/Controllers/Api/Health.php
+          php -l backend/app/Controllers/Api/Professor.php
+          php -l backend/app/Filters/ProfessorGuard.php
+          php -l backend/app/Config/Auth.php
+          php -l backend/app/Config/Security.php
+          php -l backend/app/Config/Filters.php
           php -l backend/app/Config/Routes.php
           php -l deploy/cpanel-api-index.php
           find backend/app/Services backend/app/Database/Migrations backend/tests/Integration -name '*.php' -print0 | xargs -0 -n 1 php -l
@@ -84,3 +89,8 @@ jobs:
           cat /tmp/health.json
           curl --fail --show-error http://127.0.0.1:8080/ready | tee /tmp/ready.json
           php -r '$data=json_decode(file_get_contents("/tmp/ready.json"), true); if (($data["database"] ?? null) !== "connected") exit(1);'
+          # The API must never expose professor data to anonymous browsers.
+          admin_status=$(curl --silent --output /tmp/admin-denied.json --write-out '%{http_code}' http://127.0.0.1:8080/admin/me)
+          cat /tmp/admin-denied.json
+          test "$admin_status" = '401'
+          php spark routes | grep 'admin/studies'

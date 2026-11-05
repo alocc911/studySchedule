@@ -7,3 +7,14 @@ if (year) year.textContent = String(new Date().getFullYear());
 // The Phase 1 site does not attempt live bookings.
 // Later phases will use this client for study-specific invitation requests.
 export const api = createApiClient(config.apiBaseUrl, window.location.href);
+
+// Only the public, fictional demo is linked from the Pages preview.
+if (config.mode === 'preview') {
+  const nav = document.querySelector('.main-nav');
+  if (nav) {
+    const link = document.createElement('a');
+    link.href = './admin/';
+    link.textContent = 'Workspace demo';
+    nav.append(link);
+  }
+}
