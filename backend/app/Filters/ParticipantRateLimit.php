@@ -15,7 +15,7 @@ final class ParticipantRateLimit implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        $key = 'study-participant:' . hash('sha256', (string) $request->getIPAddress());
+        $key = 'study_participant_' . hash('sha256', (string) $request->getIPAddress());
         if (!service('throttler')->check($key, 90, 60)) {
             return Services::response()->setStatusCode(429)
                 ->setHeader('Cache-Control', 'no-store')
