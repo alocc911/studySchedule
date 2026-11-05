@@ -356,12 +356,12 @@ function setupEvents() {
     (async () => {
       try {
         const issued = await store.issueInvitation(payload);
-        const url = new URL('../invite/?token=' + encodeURIComponent(issued.token), location.href).href;
+        const url = new URL('../invite/#token=' + encodeURIComponent(issued.token), location.href).href;
         $('link-value').value = url;
         $('generated-link').hidden = false;
         $('link-advice').textContent = preview
-          ? 'Demo link only. It cannot book a real session or reach the PHP server.'
-          : 'Copy this private link now. It cannot be recovered; issue another invitation if it is lost. The participant booking page is not active until Phase 4.';
+          ? 'Demo link only. It opens the fictional participant booking experience in this browser. No real appointment is created.'
+          : 'Copy this private link now. It cannot be recovered; issue another invitation if it is lost. The participant can book, cancel, or reschedule through the link.';
         $('invitation-email').value = '';
         $('invitation-name').value = '';
         await refresh();

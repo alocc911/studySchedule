@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'professor'     => \App\Filters\ProfessorGuard::class,
+        'participantRate' => \App\Filters\ParticipantRateLimit::class,
     ];
 
     /**

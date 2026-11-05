@@ -217,6 +217,85 @@ final class SchedulingService
     }
 
     /**
+     * Public-facing snapshot for exactly one invitation. Never return the
+     * invitation email, another participant's name, or a token hash.
+     *
+     * The bearer token is a credential, not proof of someone's identity.
+     */
+    public function invitationSnapshot(string $token, ?DateTimeImmutable $now = null): array
+    {
+        $now = self::utc($now ?? self::now());
+        $invitation = $this->getInvitation($token, false);
+        $this->assertUsableInvitation($invitation);
+        $booking = $this->activeBooking((int) $invitation['id'], false);
+
+        if ($booking === null && $this->isExpired($invitation, $now)) {
+            throw new SchedulingException('INVITATION_EXPIRED', 'This invitation is no longer available.');
+        }
+
+        $study = $this->db->query(
+            'SELECT id, title, description, instructions, timezone, status FROM studies WHERE id = ?',
+            [(int) $invitation['study_id']]
+        )->getRowArray();
+        if ($study === null) {
+            throw new SchedulingException('STUDY_NOT_FOUND');
+        }
+
+        $currentSession = null;
+        $changeDeadline = null;
+        $canChange = false;
+        if ($booking !== null) {
+            $currentSession = $this->db->query(
+                'SELECT id, starts_at, ends_at, location, status, capacity FROM sessions WHERE id = ?',
+                [(int) $booking['session_id']]
+            )->getRowArray();
+            if ($currentSession === null) {
+                throw new SchedulingException('SESSION_NOT_FOUND');
+            }
+            $deadline = self::parse($currentSession['starts_at'])
+                ->modify('-' . $this->changeCutoffHours . ' hours');
+            $changeDeadline = $deadline->format('Y-m-d\\TH:i:s\\Z');
+            $canChange = $now < $deadline;
+            $currentSession['id'] = (int) $currentSession['id'];
+            $currentSession['capacity'] = (int) $currentSession['capacity'];
+        }
+
+        $sessions = [];
+        if ($study['status'] === 'active') {
+            foreach ($this->availableSessions($token, $now) as $session) {
+                $session['id'] = (int) $session['id'];
+                $session['capacity'] = (int) $session['capacity'];
+                $session['available_seats'] = (int) $session['available_seats'];
+                $sessions[] = $session;
+            }
+        }
+
+        return [
+            'study' => [
+                'title' => $study['title'],
+                'description' => $study['description'],
+                'instructions' => $study['instructions'],
+                'timezone' => $study['timezone'],
+                'status' => $study['status'],
+            ],
+            'invitation' => [
+                'name' => $invitation['participant_name'],
+                'expires_at' => $invitation['expires_at'],
+                'expired_for_new_booking' => $this->isExpired($invitation, $now),
+            ],
+            'booking' => $booking === null ? null : [
+                'id' => (int) $booking['id'],
+                'session' => $currentSession,
+                'can_cancel' => $canChange,
+                'can_reschedule' => $canChange && $study['status'] === 'active',
+                'change_deadline' => $changeDeadline,
+            ],
+            'sessions' => $sessions,
+            'rules' => ['change_cutoff_hours' => $this->changeCutoffHours],
+        ];
+    }
+
+    /**
      * @return array{id:int, session_id:int, invitation_id:int}
      */
     public function book(string $token, int $sessionId, ?DateTimeImmutable $now = null): array
