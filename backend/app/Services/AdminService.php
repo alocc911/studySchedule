@@ -34,6 +34,10 @@ final class AdminService
             'invitations' => (int) $this->db->table('invitations')->countAllResults(),
             'active_bookings' => (int) $this->db->table('bookings')
                 ->where('status', 'booked')->countAllResults(),
+            'notification_pending' => (int) $this->db->table('notification_outbox')
+                ->whereIn('status', ['pending', 'sending'])->countAllResults(),
+            'notification_failed' => (int) $this->db->table('notification_outbox')
+                ->where('status', 'failed')->countAllResults(),
         ];
     }
 
