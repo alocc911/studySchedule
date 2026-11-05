@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#f7f5ef">
+  <title>Research invitation | Hospitality Research</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/mark.svg">
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="./invitation.css">
+  <script src="../config.js" defer></script>
+  <script type="module" src="./invitation.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to invitation</a>
+  <div class="participant-shell">
+    <header class="participant-header">
+      <a class="brand" href="../" aria-label="Hospitality Research home">
+        <span class="brand-icon" aria-hidden="true">H<span class="brand-period">.</span></span>
+        <span>HOSPITALITY <strong>RESEARCH</strong></span>
+      </a>
+      <span class="private-label">Private study invitation</span>
+    </header>
+    <main id="main-content" class="participant-main">
+      <section class="participant-hero" aria-labelledby="invite-heading">
+        <p class="eyebrow">A CONVERSATION WORTH HAVING</p>
+        <h1 id="invite-heading">Your research <em>invitation.</em></h1>
+        <p>Choose a convenient time, or return to this link to manage an existing appointment.</p>
+      </section>
+
+      <div id="preview-alert" class="preview-alert" hidden>
+        <strong>Interactive demo — fictional appointments only.</strong>
+        <p>Try the participant experience with sample data. No real reservation is created or email sent.</p>
+      </div>
+
+      <section id="invitation-empty" class="information-card" hidden>
+        <p class="overline">PERSONAL LINK REQUIRED</p>
+        <h2>No invitation is open</h2>
+        <p>Open the personal link shared by the researcher to see appointments for your study. Each link is for one invited participant and should be kept private.</p>
+        <div id="demo-choices" class="demo-choices" hidden>
+          <p class="helper">Or explore a fictional invitation:</p>
+          <button type="button" id="demo-new" class="primary-button">Try booking a session</button>
+          <button type="button" id="demo-existing" class="outline-button">Manage a sample booking</button>
+        </div>
+      </section>
+
+      <section id="invitation-error" class="information-card" role="alert" hidden>
+        <p class="overline">INVITATION UNAVAILABLE</p>
+        <h2 id="error-title">We couldn't open this invitation.</h2>
+        <p id="error-message"></p>
+        <button id="retry-invitation" type="button" class="outline-button">Try again</button>
+      </section>
+
+      <section id="invitation-details" hidden>
+        <div class="study-heading">
+          <p class="overline">YOU'VE BEEN INVITED</p>
+          <h2 id="study-name"></h2>
+          <p id="study-description" class="muted"></p>
+          <p id="study-greeting" class="greeting"></p>
+        </div>
+
+        <section class="information-card" id="existing-booking" aria-labelledby="booking-heading" hidden>
+          <div class="booked-header">
+            <span class="status-mark">✓</span>
+            <div><p class="overline">YOUR RESERVATION</p><h3 id="booking-heading">You're scheduled.</h3></div>
+          </div>
+          <p id="booking-time" class="booking-date"></p>
+          <p id="booking-place" class="muted"></p>
+          <p id="booking-deadline" class="helper"></p>
+          <div class="form-actions">
+            <button type="button" id="reschedule-button" class="primary-button">Choose a different time</button>
+            <button type="button" id="cancel-button" class="outline-button">Cancel reservation</button>
+          </div>
+          <p id="booking-locked" class="helper" hidden></p>
+        </section>
+
+        <section class="information-card" id="study-instructions-card" aria-labelledby="instructions-heading" hidden>
+          <p class="overline">BEFORE YOUR VISIT</p>
+          <h3 id="instructions-heading">A few things to know</h3>
+          <p id="study-instructions"></p>
+        </section>
+
+        <section class="session-section" id="session-section" aria-labelledby="sessions-heading" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="overline" id="session-mode-label">CHOOSE YOUR TIME</p>
+              <h2 id="sessions-heading">Available sessions</h2>
+              <p id="timezone-description" class="muted"></p>
+            </div>
+            <button type="button" id="stop-reschedule" class="outline-button" hidden>Keep my current booking</button>
+          </div>
+          <div id="sessions-list" class="session-list"></div>
+        </section>
+
+        <p id="no-sessions" class="information-card muted" hidden>No sessions are currently available for this study. Please contact the researcher using the original invitation email.</p>
+
+        <p class="helper footer-note">Your personal link acts as access to your reservation. Keep it private. Automatic email confirmations are not active in this version; please save your appointment details.</p>
+      </section>
+      <p id="participant-feedback" class="feedback" role="status" aria-live="polite"></p>
+      <button id="forget-invitation" type="button" class="quiet-action" hidden>Close this invitation on this device</button>
+    </main>
+    <footer class="participant-footer">
+      <span>Hospitality Research · Scheduling</span>
+      <span>This website handles appointments only, not study responses or consent.</span>
+    </footer>
+  </div>
+</body>
+</html>
