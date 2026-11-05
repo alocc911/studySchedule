@@ -4,11 +4,12 @@ A CodeIgniter 4 backend initialized from the official `codeigniter4/appstarter` 
 
 ## Local development
 
-From the repository root run `docker compose up -d db`, then inside `backend/`:
+From the repository root run `docker compose up -d db mailpit`, then inside `backend/`:
 
 ```bash
 composer install
 cp .env.example .env
+php spark migrate --all
 php spark serve --host 127.0.0.1 --port 8080
 ```
 
@@ -33,6 +34,16 @@ For deployment readiness, enable MFA and configure outgoing email before any rea
 
 ## Phase 4 participant API
 
-`GET /participant/invitation` and `POST /participant/book`, `/participant/cancel`, `/participant/reschedule` accept a 256-bit invitation bearer token in the `Authorization: Bearer <token>` **header**, never a query parameter. The frontend receives the token in the URL `#token=` fragment, strips it from browser history and retains it in the current tab's sessionStorage for refreshes. It does not require a participant login or create a participant session cookie. Route-level throttling, high-entropy tokens, per-study authorization, MySQL transactions, `no-store` response headers and fixed cutoff rules protect bookings. The professor **manually emails** invitations. Confirmation and cancellation email delivery is a later milestone.
+`GET /participant/invitation` and `POST /participant/book`, `/participant/cancel`, `/participant/reschedule` accept a 256-bit invitation bearer token in the `Authorization: Bearer <token>` **header**, never a query parameter. The frontend receives the token in the URL `#token=` fragment, strips it from browser history and retains it in the current tab's sessionStorage for refreshes. It does not require a participant login or create a participant session cookie. Route-level throttling, high-entropy tokens, per-study authorization, MySQL transactions, `no-store` response headers and fixed cutoff rules protect bookings. The professor **manually emails initial invitations**. The transactional outbox in Phase 5 queues booking, cancellation and rescheduling notifications for SMTP delivery.
 
 See `../docs/phase-4-participant-booking.md` for tests, self-service rules and GoDaddy deployment limitations.
+
+## Phase 5 email notifications
+
+Appointment emails are queued in `notification_outbox` **inside the reservation transaction**, not sent over SMTP during the booking. The event snapshot is retained for retries and has no invitation token or token hash. After successful delivery, the queue erases the recipient email and message payload; booking history remains intact.
+
+Configure `notifications.*` settings in the private `.env`. These are disabled by default. For a local preview, run `docker compose up -d mailpit`, then `php spark notifications:preview` and open `http://127.0.0.1:8025`. This command sends three **fictional** examples only to loopback Mailpit.
+
+For real queued notifications, set `notifications.enabled=true` **only after** configuring an authorized sender, SMTP encryption, credentials and a working scheduled command. Run `php spark notifications:send 20` to deliver up to 20 messages. Retry/backoff is automatic for temporary failures; after five attempts, an email is marked failed and the professor dashboard shows a warning. The GoDaddy account must support cron (or equivalent scheduled tasks) and outbound SMTP. Mail delivery is at-least-once, so a crash after SMTP accepts a message can rarely cause a duplicate.
+
+See `../docs/phase-5-email-notifications.md` for deployment, troubleshooting, and security limitations.
