@@ -36,3 +36,15 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Api', 'filter' => 'prof
     $routes->post('bookings/(:num)/cancel', 'Professor::cancelBooking/$1');
     $routes->post('bookings/(:num)/reschedule', 'Professor::rescheduleBooking/$1');
 });
+
+// Invitation bearer-token API. No participant account/session login.
+// All requests are POST for mutations (never modify data on link opening).
+$routes->group('participant', [
+    'namespace' => 'App\Controllers\Api',
+    'filter' => 'participantRate',
+], static function ($routes) {
+    $routes->get('invitation', 'Participant::invitation');
+    $routes->post('book', 'Participant::book');
+    $routes->post('cancel', 'Participant::cancel');
+    $routes->post('reschedule', 'Participant::reschedule');
+});
