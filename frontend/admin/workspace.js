@@ -90,6 +90,11 @@ async function refresh() {
   $('stat-sessions').textContent = dashboard.upcoming_sessions;
   $('stat-invitations').textContent = dashboard.invitations;
   $('stat-bookings').textContent = dashboard.active_bookings;
+  const failedEmails = Number(dashboard.notification_failed ?? 0);
+  $('notification-alert').hidden = preview || failedEmails === 0;
+  $('notification-alert-text').textContent = failedEmails
+    ? `${failedEmails} scheduling email(s) failed after repeated delivery attempts. Check SMTP settings and the private outbox on the GoDaddy server.`
+    : '';
   renderStudies();
   renderSessions();
   renderInvitations();
