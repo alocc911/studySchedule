@@ -42,21 +42,19 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: intl, mbstring, mysqli, pdo_mysql
+          extensions: intl, mbstring, mysqli, pdo_mysql, pcntl
           tools: composer:v2
           coverage: none
       - name: Install CodeIgniter dependencies
         working-directory: backend
         run: composer install --no-interaction --prefer-dist
-      - name: Lint custom PHP
+      - name: Lint application and integration PHP
         run: |
           php -l backend/app/Controllers/Api/Health.php
           php -l backend/app/Config/Routes.php
           php -l deploy/cpanel-api-index.php
-      - name: Run PHP unit tests
-        working-directory: backend
-        run: composer test
-      - name: Verify API with real MySQL connection
+          find backend/app/Services backend/app/Database/Migrations backend/tests/Integration -name '*.php' -print0 | xargs -0 -n 1 php -l
+      - name: Configure isolated CI MySQL and apply migrations
         run: |
           cat > backend/.env <<'EOF'
           CI_ENVIRONMENT = development
@@ -68,6 +66,15 @@ jobs:
           database.default.DBDriver = MySQLi
           database.default.port = 3306
           EOF
+          cd backend
+          php spark migrate --all
+      - name: Run PHP unit and integration tests against MySQL
+        working-directory: backend
+        env:
+          STUDY_SCHEDULE_INTEGRATION: '1'
+        run: composer test
+      - name: Verify API with real MySQL connection
+        run: |
           cd backend
           php spark serve --host 127.0.0.1 --port 8080 > /tmp/study-schedule-api.log 2>&1 &
           for attempt in $(seq 1 30); do

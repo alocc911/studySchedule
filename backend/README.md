@@ -21,4 +21,4 @@ The framework is not installed on GitHub Pages; it will be hosted in the profess
 
 Use `CI_ENVIRONMENT=production` in deployment. Keep `.env`, `vendor/`, `app/`, and `writable/` outside the public web root. Route only the front controller through a public `/api/` path. Do not open additional routes without server-side access controls and CSRF/CORS review.
 
-The current API has no booking or admin endpoints.
+The current API has no booking or admin endpoints. Phase 2 adds **internal PHP scheduling services** and migrations, but intentionally exposes no participant or administrator HTTP routes yet. See `../docs/phase-2-booking-engine.md`.
