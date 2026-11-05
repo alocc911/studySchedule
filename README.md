@@ -2,7 +2,7 @@
 
 A small, independently hosted research appointment scheduler for invitation-only studies.
 
-**Status: Phase 4 participant scheduling implemented in code.** Use the [professor workspace demo](https://alocc911.github.io/studySchedule/admin/) or the [participant booking demo](https://alocc911.github.io/studySchedule/invite/) on GitHub Pages to try fictional appointments. On GoDaddy, the same JavaScript frontend will call the CodeIgniter/MySQL booking API. Email notifications, MFA/production hardening, and GoDaddy deployment are **not yet complete**.
+**Status: Phase 5 scheduling email notifications implemented in code.** The [professor demo](https://alocc911.github.io/studySchedule/admin/) and [participant demo](https://alocc911.github.io/studySchedule/invite/) on GitHub Pages use fictional browser data and **never send email**. The PHP/MySQL backend now queues transactional confirmation, cancellation and rescheduling emails for SMTP delivery. GoDaddy SMTP, HTTPS, MFA and live production deployment are **not yet configured**.
 
 ## Architecture
 
@@ -45,7 +45,7 @@ Open `http://127.0.0.1:4173/`. Python is used here only as a static file server;
 ## Run the CodeIgniter API locally
 
 ```bash
-docker compose up -d db
+docker compose up -d db mailpit
 cd backend
 composer install
 cp .env.example .env
@@ -82,6 +82,20 @@ See [deploy/README.md](deploy/README.md) for the planned inexpensive cPanel layo
 
 There is **no** live GoDaddy deployment configured in Phase 1.
 
+## Test email templates without GoDaddy
+
+With PHP 8.2+, Composer and Docker installed, run:
+
+```bash
+docker compose up -d mailpit
+cd backend
+composer install
+cp .env.example .env
+php spark notifications:preview
+```
+
+Open **http://127.0.0.1:8025** to inspect three realistic but fictional messages. They never leave your computer. You can also download the `mailpit-email-previews` artifact from a passing GitHub Actions CI run, which contains captured `.eml` files. The live booking engine queues email events transactionally and `php spark notifications:send 20` delivers them after enabling SMTP locally or on GoDaddy. No Node service or extra paid hosting is required. See the [Phase 5 guide](docs/phase-5-email-notifications.md).
+
 ## Security and scope
 
 This repository is public. GitHub Pages publishes only public static files; keep credentials, participant data, and private administrative information out of source control. The website will eventually store limited scheduling data (study, invitation, session, booking, name and email), not consent forms or research responses. Secrets and real participant data must never be committed.
@@ -94,7 +108,7 @@ The private professor API has login and role-based protection. GitHub Pages **on
 2. Phase 2: Study, session, invitation, booking tables and transaction-safe booking services. **Complete, backend only.** See [Phase 2 documentation](docs/phase-2-booking-engine.md).
 3. Phase 3: Professor administrative interface, bulk session entry, invitations and booking management. **Complete in code.** See [Phase 3 documentation](docs/phase-3-professor-workspace.md).
 4. Phase 4: Participant invitation links, booking, cancellation, rescheduling and group capacity. **Implemented in code; Pages demo available.** See [Phase 4 documentation](docs/phase-4-participant-booking.md).
-5. Phase 5: Confirmation emails and lifecycle notifications.
+5. Phase 5: SMTP confirmation, cancellation and rescheduling emails with an outbox, retries, Mailpit preview and optional professor copies. **Implemented in code.** See [Phase 5 documentation](docs/phase-5-email-notifications.md).
 6. Phase 6: Polish, accessibility, security, GoDaddy staging and production deployment.
 
 The old Django/PostgreSQL foundation remains available in Git history only and is removed from this branch.

@@ -34,6 +34,10 @@ final class AdminService
             'invitations' => (int) $this->db->table('invitations')->countAllResults(),
             'active_bookings' => (int) $this->db->table('bookings')
                 ->where('status', 'booked')->countAllResults(),
+            'notification_pending' => (int) $this->db->table('notification_outbox')
+                ->whereIn('status', ['pending', 'sending'])->countAllResults(),
+            'notification_failed' => (int) $this->db->table('notification_outbox')
+                ->where('status', 'failed')->countAllResults(),
         ];
     }
 
@@ -263,6 +267,8 @@ final class AdminService
                 'from_session_id' => (int) $booking['session_id'],
                 'to_session_id' => null,
             ]);
+            (new \App\Notifications\NotificationOutbox($this->db))
+                ->enqueueEvent((int) $this->db->insertID());
         });
     }
 
@@ -332,6 +338,8 @@ final class AdminService
                 'from_session_id' => $oldId,
                 'to_session_id' => $targetSessionId,
             ]);
+            (new \App\Notifications\NotificationOutbox($this->db))
+                ->enqueueEvent((int) $this->db->insertID());
             return $newBookingId;
         });
     }

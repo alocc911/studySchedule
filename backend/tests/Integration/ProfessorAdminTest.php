@@ -28,7 +28,7 @@ final class ProfessorAdminTest extends CIUnitTestCase
             $this->fail('Refusing to modify non-CI database.');
         }
         $this->adminDb->query("SET time_zone = '+00:00'");
-        foreach (['booking_events','bookings','invitations','sessions','studies'] as $table) {
+        foreach (['notification_outbox','booking_events','bookings','invitations','sessions','studies'] as $table) {
             $this->adminDb->query("DELETE FROM {$table}");
         }
         $this->admin = new AdminService($this->adminDb);

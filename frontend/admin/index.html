@@ -59,6 +59,13 @@
           <div class="stat"><span>Active bookings</span><strong id="stat-bookings">—</strong></div>
         </section>
 
+        <section class="demo-notice" id="notification-alert" role="status" hidden>
+          <div>
+            <strong>Some scheduling emails need attention</strong>
+            <p id="notification-alert-text"></p>
+          </div>
+        </section>
+
         <nav class="workspace-tabs" aria-label="Workspace sections">
           <button type="button" class="tab active" data-tab="studies" aria-current="page">Studies</button>
           <button type="button" class="tab" data-tab="sessions">Sessions</button>
@@ -151,7 +158,7 @@
           </div>
           <div class="work-card table-card">
             <div class="table-scroll"><table><thead><tr><th>Participant</th><th>Study</th><th>Session</th><th>Status</th><th>Manage</th></tr></thead><tbody id="bookings-table"></tbody></table></div>
-            <p class="helper">Administrator changes override the participant self-service cutoff. Confirmation emails will be added in a later phase.</p>
+            <p class="helper">Administrator changes override the participant self-service cutoff. Live reservation changes queue email notifications; this demo sends none.</p>
           </div>
         </section>
       </section>

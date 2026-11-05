@@ -251,7 +251,7 @@ function setupEvents() {
   $('cancel-button').addEventListener('click', () => {
     if (!snapshot?.booking?.can_cancel) return;
     if (!window.confirm('Cancel your reservation and release this place?')) return;
-    mutate(() => api.cancel(token), 'Your reservation has been canceled. No email was sent.');
+    mutate(() => api.cancel(token), preview ? 'Your fictional reservation was canceled. No email was sent.' : 'Your reservation has been canceled. An email notification has been queued.');
   });
   $('sessions-list').addEventListener('click', event => {
     const target = event.target.closest('button[data-action]');
@@ -260,10 +260,10 @@ function setupEvents() {
     if (!Number.isInteger(id) || id < 1) return;
     if (target.dataset.action === 'reschedule') {
       if (!window.confirm('Move your reservation to this new time?')) return;
-      mutate(() => api.reschedule(token, id), 'Your appointment has been rescheduled. Please save the updated details.');
+      mutate(() => api.reschedule(token, id), preview ? 'Your fictional appointment has been rescheduled. No email was sent.' : 'Your appointment has been rescheduled. An email notification has been queued; please save the new details.');
     } else {
       if (!window.confirm('Confirm this reservation?')) return;
-      mutate(() => api.book(token, id), 'Your appointment is booked. Please save the details shown above; automatic email is not yet enabled.');
+      mutate(() => api.book(token, id), preview ? 'Your fictional appointment was booked. No email was sent.' : 'Your appointment is booked. An email confirmation has been queued; please save the details.');
     }
   });
   window.addEventListener('hashchange', async () => {

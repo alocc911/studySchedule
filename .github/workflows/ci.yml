@@ -37,6 +37,11 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+      mailpit:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -60,7 +65,7 @@ jobs:
           php -l backend/app/Config/Filters.php
           php -l backend/app/Config/Routes.php
           php -l deploy/cpanel-api-index.php
-          find backend/app/Services backend/app/Database/Migrations backend/tests/Integration -name '*.php' -print0 | xargs -0 -n 1 php -l
+          find backend/app/Services backend/app/Database/Migrations backend/app/Notifications backend/app/Commands backend/tests/Integration -name '*.php' -print0 | xargs -0 -n 1 php -l
       - name: Configure isolated CI MySQL and apply migrations
         run: |
           cat > backend/.env <<'EOF'
@@ -72,6 +77,15 @@ jobs:
           database.default.password = ci-only-password
           database.default.DBDriver = MySQLi
           database.default.port = 3306
+          notifications.enabled = true
+          notifications.fromEmail = 'scheduler@example.test'
+          notifications.fromName = 'Hospitality Research'
+          notifications.professorCopyEmail = ''
+          notifications.smtp.host = '127.0.0.1'
+          notifications.smtp.port = 1025
+          notifications.smtp.crypto = 'none'
+          notifications.smtp.username = ''
+          notifications.smtp.password = ''
           EOF
           cd backend
           php spark migrate --all
@@ -79,7 +93,35 @@ jobs:
         working-directory: backend
         env:
           STUDY_SCHEDULE_INTEGRATION: '1'
+          STUDY_SCHEDULE_MAILPIT_SMOKE: '1'
         run: composer test
+      - name: Send Mailpit previews and verify captured SMTP messages
+        working-directory: backend
+        run: |
+          php spark notifications:preview
+          mkdir -p build/mailpit-preview
+          curl --fail --show-error --silent http://127.0.0.1:8025/api/v1/messages > build/mailpit-preview/message-index.json
+          php -r '
+            $data = json_decode(file_get_contents("build/mailpit-preview/message-index.json"), true);
+            $subjects = array_map(fn ($x) => strtolower($x["Subject"] ?? ""), $data["messages"] ?? []);
+            if (($data["total"] ?? 0) < 4) { fwrite(STDERR, "Mailpit captured fewer than four messages.\\n"); exit(1); }
+            foreach (["confirmed", "canceled", "rescheduled"] as $subject) {
+              if (!array_filter($subjects, fn ($s) => str_contains($s, $subject))) {
+                fwrite(STDERR, "Missing email: " . $subject . "\\n"); exit(1);
+              }
+            }
+            echo "Mailpit captured booking, cancellation and reschedule messages.\\n";
+          '
+          for id in $(jq -r '.messages[].ID' build/mailpit-preview/message-index.json); do
+            curl --fail --show-error --silent "http://127.0.0.1:8025/api/v1/message/$id" > "build/mailpit-preview/$id.json"
+            curl --fail --show-error --silent "http://127.0.0.1:8025/api/v1/message/$id/raw" > "build/mailpit-preview/$id.eml"
+          done
+      - name: Upload fictional email preview files
+        uses: actions/upload-artifact@v4
+        with:
+          name: mailpit-email-previews
+          path: backend/build/mailpit-preview/
+          retention-days: 14
       - name: Verify API with real MySQL connection
         run: |
           cd backend
