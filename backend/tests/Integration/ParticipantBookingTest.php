@@ -32,7 +32,7 @@ final class ParticipantBookingTest extends CIUnitTestCase
             $this->fail('Refusing to alter a non-CI database.');
         }
         $this->integrationDb->query("SET time_zone = '+00:00'");
-        foreach (['booking_events', 'bookings', 'invitations', 'sessions', 'studies'] as $table) {
+        foreach (['notification_outbox', 'booking_events', 'bookings', 'invitations', 'sessions', 'studies'] as $table) {
             $this->integrationDb->query("DELETE FROM {$table}");
         }
         $this->scheduling = new SchedulingService($this->integrationDb);
