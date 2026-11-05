@@ -246,7 +246,7 @@ final class NotificationDeliveryTest extends CIUnitTestCase
         $this->assertStringNotContainsString('<script>', $content['html']);
         $this->assertStringContainsString('CST', $content['text']);
         $this->assertStringContainsString('January 12, 2027', $content['text']);
-        $this->assertStringContainsString('private invitation link', $content['text']);
+        $this->assertStringContainsString('personal invitation link', $content['text']);
     }
 
     public function testSmtpIsActuallyAcceptedByMailpit(): void
