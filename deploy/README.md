@@ -34,3 +34,22 @@ The public site will include `public_html/invite/`, served as static files, and 
 The example `cpanel-api.htaccess` forwards the Authorization header into PHP on common Apache/FastCGI configurations. **Verify this with the actual GoDaddy account before using real invitation links**: some hosting configurations may require an additional front-controller/server variable setting. Do not work around a missing header by sending the token in a query string, a public CSV, or a cookie. The GitHub Pages demo remains completely separate from the real PHP API and contains no participant data.
 
 Before production, verify real session persistence, administrator MFA, SMTP/email notification delivery, backups and a recovery test, no access to private framework files, and HTTPS enforcement on the intended GoDaddy plan.
+
+## Phase 5: transactional SMTP mail and cron
+
+The CodeIgniter backend enqueues an email record within the same MySQL transaction as each booking, cancellation or rescheduling event. The website **does not send SMTP during the participant's request** and no separate background worker, Redis service or paid hosting is required.
+
+1. Confirm the specific GoDaddy/cPanel tier supports outbound SMTP to the chosen provider (typically encrypted port 587 or 465) **and cron jobs**. The lowest-cost tier may or may not include a usable mailbox/relay; verify before choosing an account.
+2. Configure the **private** backend `.env` with `notifications.fromEmail` (an authorized sender), `notifications.smtp.host`, `.port`, `.crypto` (`tls` or `ssl`), `.username`, `.password`; optionally `notifications.professorCopyEmail`. These values must not appear in the publicly deployed `frontend/config.js` or the repository.
+3. Configure a private cPanel cron task, e.g. every five minutes, adapting PHP's executable path to the real hosting account:
+
+```cron
+*/5 * * * * cd /home/ACCOUNT/study-schedule-backend && /usr/local/bin/php spark notifications:send 20 >> /home/ACCOUNT/study-schedule-backend/writable/logs/email-cron.log 2>&1
+```
+
+4. Confirm the scheduled task actually runs, the admin dashboard has zero failed notifications, and real delivery reaches test inboxes. Only after the prerequisites succeed set `notifications.enabled=true`. Follow up with SPF/DKIM/DMARC and spam-folder checks for your sender domain.
+5. Make sure the mail cron and site use the same database and that the private `writable` directory is writable. Disable real notification delivery while loading sample records in staging.
+
+**Limits:** Failed messages are automatically retried (up to five attempts), then require manual inspection. At-least-once SMTP delivery means an unusual crash can produce a duplicate. Messages aren't recalled if an appointment changes again before the queue sends; each email preserves the event's original snapshot. Successful deliveries clear recipient email and payload from the queue. The invitation link token is never included in these notifications.
+
+Mailpit is **only a local/test SMTP sink** and must never be exposed or deployed publicly on GoDaddy.
