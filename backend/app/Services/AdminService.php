@@ -263,6 +263,8 @@ final class AdminService
                 'from_session_id' => (int) $booking['session_id'],
                 'to_session_id' => null,
             ]);
+            (new \App\Notifications\NotificationOutbox($this->db))
+                ->enqueueEvent((int) $this->db->insertID());
         });
     }
 
@@ -332,6 +334,8 @@ final class AdminService
                 'from_session_id' => $oldId,
                 'to_session_id' => $targetSessionId,
             ]);
+            (new \App\Notifications\NotificationOutbox($this->db))
+                ->enqueueEvent((int) $this->db->insertID());
             return $newBookingId;
         });
     }
