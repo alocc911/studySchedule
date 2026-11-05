@@ -2,7 +2,7 @@
 
 A small, independently hosted research appointment scheduler for invitation-only studies.
 
-**Status: Phase 2 engine implemented.** The GitHub Pages frontend is a static design preview. The CodeIgniter backend has a MySQL schema and an internal transaction-safe scheduling service, but participant booking endpoints, professor login/UI, and email notifications are **not yet available**.
+**Status: Phase 3 professor workspace implemented.** The static site includes a fictional, interactive workspace demo at [GitHub Pages](https://alocc911.github.io/studySchedule/admin/). On the GoDaddy site, the same dashboard will require a real professor login through CodeIgniter Shield. Participant self-service bookings and email notifications are **not yet available**.
 
 ## Architecture
 
@@ -49,7 +49,7 @@ docker compose up -d db
 cd backend
 composer install
 cp .env.example .env
-php spark migrate
+php spark migrate --all
 php spark serve --host 127.0.0.1 --port 8080
 ```
 
@@ -86,13 +86,13 @@ There is **no** live GoDaddy deployment configured in Phase 1.
 
 This repository is public. GitHub Pages publishes only public static files; keep credentials, participant data, and private administrative information out of source control. The website will eventually store limited scheduling data (study, invitation, session, booking, name and email), not consent forms or research responses. Secrets and real participant data must never be committed.
 
-No professor login or participant booking HTTP endpoints exist yet; don't share the preview URL as an active scheduler.
+The private professor API has login and role-based protection. GitHub Pages **only** serves an isolated sample-data demo; it does not access the private API. The application is not ready to process real participant information until administrator MFA, transport/email configuration, and production deployment are verified. No participant self-service endpoints exist yet.
 
 ## Roadmap
 
 1. Phase 1: Static frontend, PHP API framework, MySQL connection, CI, Pages preview. **Complete.**
 2. Phase 2: Study, session, invitation, booking tables and transaction-safe booking services. **Complete, backend only.** See [Phase 2 documentation](docs/phase-2-booking-engine.md).
-3. Phase 3: Professor administrative interface and bulk session entry.
+3. Phase 3: Professor administrative interface, bulk session entry, invitations and booking management. **Complete in code.** See [Phase 3 documentation](docs/phase-3-professor-workspace.md).
 4. Phase 4: Invitation-based booking, cancellation, rescheduling, group capacity.
 5. Phase 5: Confirmation emails and lifecycle notifications.
 6. Phase 6: Polish, accessibility, security, GoDaddy staging and production deployment.

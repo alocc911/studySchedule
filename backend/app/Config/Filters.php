@@ -34,6 +34,7 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        'professor'     => \App\Filters\ProfessorGuard::class,
     ];
 
     /**
@@ -106,5 +107,8 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        // CSRF is mandatory on login and every admin mutation. GETs are safe.
+        'csrf' => ['before' => ['login', 'admin/*']],
+    ];
 }

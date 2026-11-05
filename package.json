@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/frontend/*.test.mjs",
-    "check": "node --check frontend/assets/js/api.js && node --check frontend/assets/js/main.js"
+    "check": "node --check frontend/assets/js/api.js && node --check frontend/assets/js/main.js && node --check frontend/admin/professor-api.js && node --check frontend/admin/demo-store.js && node --check frontend/admin/workspace.js"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
