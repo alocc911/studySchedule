@@ -81,6 +81,29 @@ final class NotificationDispatcher
         return $stats;
     }
 
+    /**
+     * Deliberate, one-record retry after an operator has resolved SMTP issues.
+     * The terminal failed row keeps its original event snapshot until it sends.
+     */
+    public function retryFailed(int $id): bool
+    {
+        if ($id < 1) {
+            throw new \InvalidArgumentException('Notification ID must be positive.');
+        }
+        $this->db->table('notification_outbox')
+            ->where('id', $id)
+            ->where('status', 'failed')
+            ->update([
+                'status' => 'pending',
+                'attempts' => 0,
+                'next_attempt_at' => gmdate('Y-m-d H:i:s'),
+                'claimed_at' => null,
+                'claim_key' => null,
+                'last_error_code' => null,
+            ]);
+        return $this->db->affectedRows() === 1;
+    }
+
     private function claim(): ?array
     {
         $this->db->transException(true);
