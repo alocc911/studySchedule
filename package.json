@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/frontend/*.test.mjs",
-    "check": "node --check frontend/assets/js/api.js && node --check frontend/assets/js/main.js && node --check frontend/admin/professor-api.js && node --check frontend/admin/demo-store.js && node --check frontend/admin/workspace.js"
+    "check": "node --check frontend/assets/js/api.js && node --check frontend/assets/js/main.js && node --check frontend/admin/professor-api.js && node --check frontend/admin/demo-store.js && node --check frontend/admin/workspace.js && node --check frontend/invite/participant-api.js && node --check frontend/invite/demo-participant.js && node --check frontend/invite/invitation.js"
   },
   "engines": {
     "node": ">=20"
