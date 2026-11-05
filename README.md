@@ -2,7 +2,7 @@
 
 A small, independently hosted research appointment scheduler for invitation-only studies.
 
-**Status: Phase 1 rebuilt for a static JavaScript frontend + CodeIgniter 4 / MySQL backend.** The frontend is a working static site preview; the backend provides health endpoints, but no scheduling, participant accounts or administrative booking tools have been implemented yet.
+**Status: Phase 2 engine implemented.** The GitHub Pages frontend is a static design preview. The CodeIgniter backend has a MySQL schema and an internal transaction-safe scheduling service, but participant booking endpoints, professor login/UI, and email notifications are **not yet available**.
 
 ## Architecture
 
@@ -49,6 +49,7 @@ docker compose up -d db
 cd backend
 composer install
 cp .env.example .env
+php spark migrate
 php spark serve --host 127.0.0.1 --port 8080
 ```
 
@@ -83,14 +84,14 @@ There is **no** live GoDaddy deployment configured in Phase 1.
 
 ## Security and scope
 
-This repository is private. GitHub Pages, if enabled, publishes only public static files. The website will eventually store limited scheduling data (study, invitation, session, booking, name and email), not consent forms or research responses. Secrets and real participant data must never be committed.
+This repository is public. GitHub Pages publishes only public static files; keep credentials, participant data, and private administrative information out of source control. The website will eventually store limited scheduling data (study, invitation, session, booking, name and email), not consent forms or research responses. Secrets and real participant data must never be committed.
 
-Phase 1 contains no login or booking functionality; don't give its preview URL to research participants as an active scheduler.
+No professor login or participant booking HTTP endpoints exist yet; don't share the preview URL as an active scheduler.
 
 ## Roadmap
 
-1. Phase 1: Static frontend, PHP API framework, MySQL connection, CI, Pages preview. **Proposed here.**
-2. Phase 2: Study, session, invitation, booking tables and transaction-safe booking services.
+1. Phase 1: Static frontend, PHP API framework, MySQL connection, CI, Pages preview. **Complete.**
+2. Phase 2: Study, session, invitation, booking tables and transaction-safe booking services. **Complete, backend only.** See [Phase 2 documentation](docs/phase-2-booking-engine.md).
 3. Phase 3: Professor administrative interface and bulk session entry.
 4. Phase 4: Invitation-based booking, cancellation, rescheduling, group capacity.
 5. Phase 5: Confirmation emails and lifecycle notifications.
