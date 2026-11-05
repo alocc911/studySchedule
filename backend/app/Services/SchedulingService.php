@@ -519,6 +519,8 @@ final class SchedulingService
             'from_session_id' => $fromId,
             'to_session_id' => $toId,
         ]);
+        $eventId = (int) $this->db->insertID();
+        (new \App\Notifications\NotificationOutbox($this->db))->enqueueEvent($eventId);
     }
 
     private function transaction(callable $work): mixed
