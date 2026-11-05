@@ -4,6 +4,11 @@ Options -Indexes
   RewriteEngine On
   RewriteBase /api/
 
+  # Some CGI/FastCGI deployments do not forward Authorization automatically.
+  # Keep the bearer token in the request header, never in query strings.
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.*)$ index.php/$1 [L,QSA]
